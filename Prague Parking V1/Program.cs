@@ -41,6 +41,8 @@ void MainMenu()
 
 
                 fordonstyp = GetFordonsTyp();
+
+                Console.Write("\n\t\tEnter vehicle registration number (No blankspaces): ");
                 regNr = GetRegNr();
                 int parkingNr = GetFirstFreePSpace(parkingGarage, fordonstyp);
 
@@ -74,14 +76,28 @@ void MainMenu()
                 
                 PrintHeader();
                 Console.Write("\n\tEnter registration number of vehicle to check out: ");
-                string checkOutRegNr = Console.ReadLine().ToUpper();
+                string checkOutRegNr = GetRegNr();
                 int checkOutIndex = SearchForVehicle(parkingGarage, checkOutRegNr);
-                CheckOutVehicle(parkingGarage, checkOutIndex, checkOutRegNr);
 
-                // Arbetsorder hämta bil från plats ## +1
-                Console.WriteLine("\t\tGet vehicle: {0} at parkingspace: {1}", checkOutRegNr, checkOutIndex + 1);
-                Console.WriteLine("\n\n\t\tPress any key to return to menu...");
-                Console.ReadKey();
+                PrintHeader();
+                if (checkOutIndex == -99)
+                {
+                    Console.WriteLine("\nThe given registrationnumber does not exist in the Parking garage.");
+                    Console.WriteLine("\n\n\t\tPress any key to return to menu..");
+                    Console.ReadKey();
+                }
+                else
+                {
+                    CheckOutVehicle(parkingGarage, checkOutIndex, checkOutRegNr);
+
+                    // Arbetsorder hämta bil med reg från plats ## +1
+                    
+                    Console.ForegroundColor = ConsoleColor.Green;
+                    Console.WriteLine("\n\t\tGet vehicle: {0} at parkingspace: {1}", checkOutRegNr, checkOutIndex + 1);
+                    Console.ResetColor();
+                    Console.WriteLine("\n\n\t\tPress any key to return to menu...");
+                    Console.ReadKey();
+                }
                 break;
 
             // [4] Search for a vehicle
@@ -90,20 +106,21 @@ void MainMenu()
                 
                 PrintHeader();
                 Console.Write("\n\t\tEnter registration number to search for: ");
-                string targetRegNr = Console.ReadLine().ToUpper();
+                string targetRegNr = GetRegNr();
 
                 int indexPPlats = SearchForVehicle(parkingGarage, targetRegNr);
-
+                PrintHeader();
                 if (indexPPlats != -99)
                 {
-                    Console.WriteLine("\t\tVehicle was found!\n");
+                    Console.WriteLine("\n\t\tVehicle was found!\n");
                     Console.WriteLine(HämtaPRuta(parkingGarage, indexPPlats));
                     Console.WriteLine("\n\n\t\tPress any key to return to menu..");
                     Console.ReadKey();
                 }
                 else
                 {
-                    Console.WriteLine("The given registrationnumber does not exist in the Parking garage.");
+                    Console.WriteLine("\nThe given registrationnumber does not exist in the Parking garage.");
+                    Console.WriteLine("\n\n\t\tPress any key to return to menu..");
                     Console.ReadKey();
                 }
                 break;
@@ -273,9 +290,8 @@ int GetFirstFreePSpace(string[] parkingGarage, string fordonstyp)
 
 string GetRegNr()
 {
-    Console.Clear();
-    PrintHeader();
-    Console.Write("\n\t\tEnter vehicle registration number (No blankspaces): ");
+    
+    //lägg till maxlängd 10 tecken
     regNr = Console.ReadLine().ToUpper();
     Console.Clear();
 
@@ -287,10 +303,11 @@ string GetFordonsTyp()
 
     while (true)
     {
-        Console.Clear();
+        
         PrintHeader();
         Console.Write("\n\t\t\tEnter [C] for Car or [M] for Motorcycle: ");
         ConsoleKey carOrMc = Console.ReadKey().Key;
+
         switch (carOrMc)
         {
             case ConsoleKey.C:
@@ -344,6 +361,7 @@ void PrintHeader()
                   |___/                                           |___/               
 --------------------------------------------------------------------------------------");
     Console.ResetColor();
+    Console.WriteLine();
 
 }
 
