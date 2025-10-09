@@ -6,14 +6,14 @@
 
 
 using System.Transactions;
-
+// En array med 100 platser som motsvarar parkeringsplatserna
 string[] parkingGarage = new string[100];
 string skiljetecken1 = "#";
 string skiljetecken2 = "|";
 string fordonstyp;
 string regNr;
 
-//Test värden
+// ==== Test värden ===== \\
 parkingGarage[0] = "CAR#ABC123";
 parkingGarage[1] = "MC#AAA333";
 parkingGarage[2] = "MC#BBB444|MC#CCC555";
@@ -22,9 +22,9 @@ bool exitProgram = false;
 
 MainMenu();
 
-// ------ Metoder ------ \\
+// ====== Metoder ====== \\
 
-// Metod för huvudmeny
+// Metod för huvudmeny och styrning av programmet
 void MainMenu()
 {
     while (exitProgram == false)
@@ -35,45 +35,98 @@ void MainMenu()
 
         switch (menuChoice)
         {
-            // [1] Park a vehicle
+            // ====== [1] Park a vehicle ====== \\
             case ConsoleKey.D1:
             case ConsoleKey.NumPad1:
 
 
                 fordonstyp = GetFordonsTyp();
 
-                Console.Write("\n\t\tEnter vehicle registration number (No blankspaces): ");
+                Console.Write("\n\t\tEnter vehicle registration number to park: ");
                 regNr = GetRegNr();
                 int parkingNr = GetFirstFreePSpace(parkingGarage, fordonstyp);
 
                 //-99 betyder full parkering
                 if (parkingNr == -99)
                 {
-                    Console.WriteLine("Parking garage is full! (Press any key to return to Menu)");
-                    Console.ReadKey();
-                    break;
+                    Console.WriteLine("\t\tParking garage is full!");
+                    
                 }
                 else
                 {
-
+                    Console.WriteLine("Ostkaka");// Debugg
                     ParkVehicle(parkingGarage, fordonstyp, skiljetecken1, regNr, parkingNr);
-                    PrintArbetsorder(fordonstyp, regNr, parkingNr);
+                    PrintHeader();
+                    PrintArbetsorderParkera(fordonstyp, regNr, parkingNr);
 
+                    
                 }
-
+                Console.WriteLine("\n\n\t\t\t(Press any key to return to menu...)");
+                Console.ReadKey();
                 break;
-            // [2] Move a vehicle manually
+
+            // ====== [2] Move a vehicle manually ===== \\
             case ConsoleKey.D2:
             case ConsoleKey.NumPad2:
-                // Call method to move a vehicle manually
-                //Console.WriteLine(""); by reg nr or by index
-                //int indexFrom;
-                //int indexTo;
+                                             
+                PrintHeader();
+                Console.Write("\n\tEnter registration number of vehicle you want to move: ");
+                string moveRegNr = GetRegNr();
+                int indexMoveFrom = SearchForVehicle(parkingGarage, moveRegNr);
+                int indexMoveTo;
+
+                //Kollar om regnr finns på parkeringen
+                if (indexMoveFrom == -99)
+                {
+                    PrintHeader();
+                    Console.WriteLine("\nThe given registrationnumber does not exist in the Parking garage.");
+                    Console.WriteLine("\n\n\t\tPress any key to return to menu..");
+                    Console.ReadKey();
+                    break;
+                }
+
+                // Frågar om vilken plats användaren vill flytta fordonet till
+                Console.Write($"\n\tTo what parkingspace do you want to move {moveRegNr}? (1-100): ");
+                indexMoveTo = int.Parse(Console.ReadLine());
+                // -1 för att få rätt index
+                indexMoveTo -= 1;
+
+                //Kollar om användaren valt en giltig plats (1- 100)
+                if (indexMoveTo < 0 || indexMoveTo > 99)
+                {
+                    PrintHeader();
+                    Console.WriteLine("\n\t\tInvalid parking space! (Must be between 1-100) \n\n\t\t(Press any key to return to menu..)");
+                    Console.ReadKey();
+                    break;
+                }
+
+                //Kollar om fordonet är en bil eller MC
+                fordonstyp = IsCarOrMC(parkingGarage, indexMoveFrom);
+                
+                //Kollar om platsen är ledig
+                bool platsLedig = IsPSpaceAvailable(parkingGarage, indexMoveTo, fordonstyp);
+
+                if (platsLedig == false)
+                {
+                    Console.WriteLine("\n\t\tParking space is occupied! choose another spot\n\n\t\t(Press any key to return to menu..)");
+                    break;
+                }
+                //Parkerar fordonet på ny plats
+                ParkVehicle(parkingGarage, fordonstyp, skiljetecken1, moveRegNr, indexMoveTo);
+
+                //Tar bort fordonet från den gamla platsen
+                CheckOutVehicle(parkingGarage, indexMoveFrom, moveRegNr);
+                //Fixa utskrift av arbetsorder och fixa index
+                PrintArbetsorderCheckOut(moveRegNr, indexMoveFrom);
+                PrintArbetsorderParkera(fordonstyp, moveRegNr, indexMoveTo);
+                Console.ReadKey();
+
                 break;
-            // [3] Check out a vehicle
+
+            // ====== [3] Check out a vehicle ====== \\
             case ConsoleKey.D3:
             case ConsoleKey.NumPad3:
-                
+
                 PrintHeader();
                 Console.Write("\n\tEnter registration number of vehicle to check out: ");
                 string checkOutRegNr = GetRegNr();
@@ -83,27 +136,25 @@ void MainMenu()
                 if (checkOutIndex == -99)
                 {
                     Console.WriteLine("\nThe given registrationnumber does not exist in the Parking garage.");
-                    Console.WriteLine("\n\n\t\tPress any key to return to menu..");
-                    Console.ReadKey();
+                    
                 }
                 else
                 {
+                    // Ta bort fordonet från parkeringen
                     CheckOutVehicle(parkingGarage, checkOutIndex, checkOutRegNr);
 
-                    // Arbetsorder hämta bil med reg från plats ## +1
-                    
-                    Console.ForegroundColor = ConsoleColor.Green;
-                    Console.WriteLine("\n\t\tGet vehicle: {0} at parkingspace: {1}", checkOutRegNr, checkOutIndex + 1);
-                    Console.ResetColor();
-                    Console.WriteLine("\n\n\t\tPress any key to return to menu...");
-                    Console.ReadKey();
+                    // Skriver ut arbetsorder hämta fordon med reg från plats ##
+                    PrintArbetsorderCheckOut(checkOutRegNr, checkOutIndex);
+                                                          
                 }
+                Console.WriteLine("\n\n\t\tPress any key to return to menu...");
+                Console.ReadKey();
                 break;
 
-            // [4] Search for a vehicle
+            // ====== [4] Search for a vehicle ===== \\
             case ConsoleKey.D4:
             case ConsoleKey.NumPad4:
-                
+
                 PrintHeader();
                 Console.Write("\n\t\tEnter registration number to search for: ");
                 string targetRegNr = GetRegNr();
@@ -128,7 +179,7 @@ void MainMenu()
             // [5] Exit the program fråga om användaren är säker
             case ConsoleKey.D5:
             case ConsoleKey.NumPad5:
-                
+
                 PrintHeader();
                 Console.Write("\n\t\t\tAre you sure you want to exit? (Y/N)");
                 ConsoleKey exitChoice = Console.ReadKey().Key;
@@ -149,6 +200,52 @@ void MainMenu()
                 break;
         }
     }
+}
+
+
+
+bool IsPSpaceAvailable(string[] parkingGarage, int indexMoveTo, string fordonstyp)
+{
+    //Kollar om platsen är helt tom
+    if (parkingGarage[indexMoveTo] == "" || parkingGarage[indexMoveTo] == null)
+    {
+        return true;
+    }
+    else
+    {
+        if (fordonstyp == "CAR")
+        {
+            
+            return false;
+        }
+        //Om fordonet är en MC
+        else
+        {
+            //Kollar om det redan står 2st MC på platsen
+            if (parkingGarage[indexMoveTo].Contains('|'))
+            {
+                return false;
+            }
+            //Om det bara står 1 MC på platsen
+            else
+            {
+                return true;
+            }
+        }
+    }
+}
+
+string IsCarOrMC(string[] parkingGarage, int index)
+{
+    if (parkingGarage[index].Contains("CAR"))
+    {
+        fordonstyp = "CAR";
+    }
+    else
+    {
+        fordonstyp = "MC";
+    }
+    return fordonstyp;
 }
 
 void CheckOutVehicle(string[] parkingGarage, int checkOutIndex, string checkOutRegNr)
@@ -213,15 +310,21 @@ int SearchForVehicle(string[] parkingGarage, string target)
 }
 
 //Skriver ut arbetsorder
-void PrintArbetsorder(string fordonstyp, string regNr, int parkingNr)
+void PrintArbetsorderParkera(string fordonstyp, string regNr, int parkingNr)
 {
-    PrintHeader();
+    
     Console.ForegroundColor = ConsoleColor.Green;
-    Console.WriteLine("\n\t\t\tPark {0}: {1} at parking space: {2}", fordonstyp, regNr, parkingNr + 1);
+    Console.WriteLine("\n\t\tPark {0}: {1} at parking space: {2}", fordonstyp, regNr, parkingNr + 1);
     Console.ResetColor();
-    Console.WriteLine("\n\n\t\t\t(Press any key to return to menu...)");
-    Console.ReadKey();
+    
 }
+void PrintArbetsorderCheckOut(string checkOutRegNr, int checkOutIndex)
+{
+    Console.ForegroundColor = ConsoleColor.DarkYellow;
+    Console.WriteLine("\n\t\tGet: {0} at parkingspace: {1}", checkOutRegNr, checkOutIndex + 1);
+    Console.ResetColor();
+}
+
 
 
 // Parkerar fordonet
@@ -231,7 +334,7 @@ void ParkVehicle(string[] parkingGarage, string fordonstyp, string skiljetecken1
     {
         parkingGarage[parkingNr] = fordonstyp + skiljetecken1 + regNr;
     }
-    else 
+    else
     {
         //Om parkeringsplatsen är helt tom
         if (parkingGarage[parkingNr] == null || parkingGarage[parkingNr] == "")
@@ -245,7 +348,7 @@ void ParkVehicle(string[] parkingGarage, string fordonstyp, string skiljetecken1
         }
 
     }
-    
+
 }
 
 //Kolla första lediga P-plats
@@ -255,7 +358,7 @@ int GetFirstFreePSpace(string[] parkingGarage, string fordonstyp)
     int freeIndex = -99;
     if (fordonstyp == "CAR")
     {
-        
+
         for (int i = 0; i < parkingGarage.Length; i++)
         {
             if (parkingGarage[i] == "" || parkingGarage[i] == null)
@@ -267,7 +370,7 @@ int GetFirstFreePSpace(string[] parkingGarage, string fordonstyp)
 
         }
     }
-    else 
+    else
     {
         for (int i = 0; i < parkingGarage.Length; i++)
         {
@@ -290,10 +393,19 @@ int GetFirstFreePSpace(string[] parkingGarage, string fordonstyp)
 
 string GetRegNr()
 {
-    
-    //lägg till maxlängd 10 tecken
+
+    //Hämtar regnr och gör om till stora bokstäver
     regNr = Console.ReadLine().ToUpper();
-    Console.Clear();
+    //Kollar att regnr inte är för långt
+    if (regNr.Length > 10)
+    {
+        Console.Beep();
+        Console.ForegroundColor = ConsoleColor.DarkYellow;
+        Console.WriteLine("\n\t\tRegistration number too long! Max 10 characters! (Try again..)");
+        Console.ResetColor();
+
+        return GetRegNr();
+    }
 
     return regNr;
 }
@@ -303,7 +415,7 @@ string GetFordonsTyp()
 
     while (true)
     {
-        
+
         PrintHeader();
         Console.Write("\n\t\t\tEnter [C] for Car or [M] for Motorcycle: ");
         ConsoleKey carOrMc = Console.ReadKey().Key;
