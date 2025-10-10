@@ -6,6 +6,7 @@
 
 
 using System.Transactions;
+
 // En array med 100 platser som motsvarar parkeringsplatserna
 string[] parkingGarage = new string[100];
 string skiljetecken1 = "#";
@@ -299,6 +300,7 @@ int SearchForVehicle(string[] parkingGarage, string target)
     for (int i = 0; i < parkingGarage.Length; i++)
     {
 
+        //Kollar om parkering med index i innehåller regnr som söks efter
         if (parkingGarage[i] != null && parkingGarage[i].Contains(target))
         {
             indexOfTarget = i; break;
