@@ -18,6 +18,8 @@ string regNr;
 parkingGarage[0] = "CAR#ABC123";
 parkingGarage[1] = "MC#AAA333";
 parkingGarage[2] = "MC#BBB444|MC#CCC555";
+parkingGarage[3] = "CAR#BBB333";
+parkingGarage[4] = "";
 
 bool exitProgram = false;
 
@@ -31,7 +33,7 @@ void MainMenu()
     while (exitProgram == false)
     {
         PrintMenu();
-
+        Console.Write("\n\t\t\t");
         ConsoleKey menuChoice = Console.ReadKey().Key;
 
         switch (menuChoice)
@@ -110,6 +112,7 @@ void MainMenu()
                 if (platsLedig == false)
                 {
                     Console.WriteLine("\n\t\tParking space is occupied! choose another spot\n\n\t\t(Press any key to return to menu..)");
+                    Console.ReadKey();
                     break;
                 }
                 //Parkerar fordonet på ny plats
@@ -207,10 +210,16 @@ void MainMenu()
 
 bool IsPSpaceAvailable(string[] parkingGarage, int indexMoveTo, string fordonstyp)
 {
+    
     //Kollar om platsen är helt tom
     if (parkingGarage[indexMoveTo] == "" || parkingGarage[indexMoveTo] == null)
     {
+        
         return true;
+    }
+    if (parkingGarage[indexMoveTo].Contains("CAR"))
+    {
+        return false;
     }
     else
     {
@@ -222,6 +231,7 @@ bool IsPSpaceAvailable(string[] parkingGarage, int indexMoveTo, string fordonsty
         //Om fordonet är en MC
         else
         {
+
             //Kollar om det redan står 2st MC på platsen
             if (parkingGarage[indexMoveTo].Contains('|'))
             {
@@ -296,6 +306,7 @@ string HämtaPRuta(string[] parkingGarage, int indexPPlats)
 
 int SearchForVehicle(string[] parkingGarage, string target)
 {
+    //Använder värdet -99 för att visa att regnr inte finns i parkingGarage
     int indexOfTarget = -99;
     for (int i = 0; i < parkingGarage.Length; i++)
     {
@@ -398,12 +409,12 @@ string GetRegNr()
 
     //Hämtar regnr och gör om till stora bokstäver
     regNr = Console.ReadLine().ToUpper();
-    //Kollar att regnr inte är för långt
-    if (regNr.Length > 10)
+    //Kollar att regnr inte är för långt, innehålelr mellanslag
+    if (regNr.Length > 10 || regNr.Length == 0 || regNr.Any(Char.IsWhiteSpace))
     {
         Console.Beep();
         Console.ForegroundColor = ConsoleColor.DarkYellow;
-        Console.WriteLine("\n\t\tRegistration number too long! Max 10 characters! (Try again..)");
+        Console.WriteLine("\n\t\tIncorrect Registration number! Max 10 characters, no blanc spaces and not empty! (Try again..)");
         Console.ResetColor();
 
         return GetRegNr();
